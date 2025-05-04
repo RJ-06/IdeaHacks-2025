@@ -23,7 +23,7 @@ int index = 0; //index to keep track of the current chord being played
 
 //note - noteMap uses string noteName as key, value as [string, fingerPosition]
 hashmap <string, [int, int]> noteMap = {}; //map of notes to their fret positions
-vector <string, string> chordMap = {}; //map of chords to their notes
+hashmap <string, vector<string>> chordMap = {}; //map of chords to their notes
 vector <string> chordScore = {}; //list of chords to autoplay
 
 //cli stuff - use for parsing, delimiter
@@ -38,12 +38,21 @@ char argIndicator = '/';
 
 void printHelp() {
     cout << "Available commands:" << endl;
-    cout << "1. /play <chord> - Play a chord - standard play must be stopped" << endl;
-    cout << "2. /stop - Stop playing" << endl;
-    cout << "3. /help - Show this help message" << endl;
-    cout << "4. /delay <time> - Change delay time between notes" << endl;
-    cout << "5. /chords - Show available chords" << endl;
-    cout << "6. /exit - Exit the program" << endl;
+    cout << "delay <time> - set the delay time between notes" << endl;
+    cout << "chords - print the available chords" << endl;
+    cout << "allChords - print the list of all chords" << endl;
+    cout << "currentChord - print the current chord being played" << endl;
+    cout << "chordNear <value> - print the chords near the given value" << endl;
+    cout << "score - print the list of chords to be played" << endl;
+    cout << "addChord <chordName> <stringToPlay> <fretToPlay> - add a chord to the list of chords to be played" << endl;
+    cout << "addToScore <chord> - add a chord to the list of chords to be played" << endl;
+    cout << "deleteChord <index> - delete a chord at the specified index from the list of chords to be played" << endl;
+    cout << "reset - reset the playing flag and clear the list of chords" << endl;
+    cout << "play - start playing from the beginning of the song or continue playing from where it left off" << endl;
+    cout << "   -r - start playing from the beginning of the song" << endl;
+    cout << "pause - stop playing the chord" << endl;
+    cout << "help - print the help message" << endl;
+    cout << "exit - exit the program" << endl;
 }
 
 void printAvailableChords() { //these are all possible chords available to play
@@ -107,22 +116,42 @@ void resetScore() { //reset the playing flag
     cout << "Reset Score." << endl;
 }
 
-void addToPossibleChords(int chordName, int strToPlay, int frtToPlay) 
-{ //add a chord to the list of chords to be played - note must create new chord, and only then add to the list
+// void addToPossibleChords(int chordName, int strToPlay, int frtToPlay) 
+// { //add a chord to the list of chords to be played - note must create new chord, and only then add to the list - notes added separately
+//     if (chordName == "") { //check for empty chord name
+//         cout << "Chord name cannot be empty." << endl;
+//         return;
+//     }
+//     if (strToPlay < 1 || strToPlay > 6) { //check for invalid string number
+//         cout << "Invalid string number. Must be between 1 and 6." << endl;
+//         return;
+//     }
+//     if (frtToPlay < 0 || frtToPlay > 5) { //check for invalid fret number
+//         cout << "Invalid fret number. Must be between 0 and 5." << endl;
+//         return;
+//     }
+//     noteMap[chordName] = { strToPlay, frtToPlay }; //add the chord to the map of chords to their notes
+//     cout << "Added chord: " << chordName << " to the list of chords to be played." << endl;
+// }
+
+void createChord(int chordName, string notesList)
+{
     if (chordName == "") { //check for empty chord name
         cout << "Chord name cannot be empty." << endl;
         return;
     }
-    if (strToPlay < 1 || strToPlay > 6) { //check for invalid string number
-        cout << "Invalid string number. Must be between 1 and 6." << endl;
+    if (notesList == "") { //check for empty notes list
+        cout << "Notes list cannot be empty." << endl;
         return;
     }
-    if (frtToPlay < 0 || frtToPlay > 5) { //check for invalid fret number
-        cout << "Invalid fret number. Must be between 0 and 5." << endl;
-        return;
+    vector<string> notes; //vector to hold the notes in the chord
+    stringstream ss(notesList); //use stringstream to parse the notes list
+    string note; //string to hold the note
+    while (ss >> note) { //get the notes from the list
+        notes.push_back(note); //add the note to the vector of notes
     }
-    noteMap[chordName] = { strToPlay, frtToPlay }; //add the chord to the map of chords to their notes
-    cout << "Added chord: " << chordName << " to the list of chords to be played." << endl;
+    chordMap[chordName] = notes; //add the chord to the map of chords to their notes
+    cout << "Created chord: " << chordName << " with notes: " << notesList << endl;
 }
 
 void deleteChordAtIndex(int index) { //delete a chord at a specific index
@@ -153,7 +182,8 @@ void addChordToScore(string chord) { //add a chord to the list of chords to be p
 
 void startPlaying()//play from 
 {
-
+    isPlaying = true; //set the flag to true
+    cout << "Started playing." <<endl;
 }
 
 void pausePlaying() { //stop playing the chord
@@ -169,6 +199,7 @@ void continuePlaying()
 
 void restartPlaying() { //restart the playing flag
     index = 0; //reset the index to 0
+    isPlaying = true; //set the flag to true
     cout << "Restarted playing from the beginning of the song." << endl;
 }
 
@@ -179,7 +210,77 @@ void playChord(string chord) { //play a chord
     int fretToPlay = positions[1]; //get the fret to play from the map
     //play the note here - use the string and fret to play the note
 
-    cout << "Playing chord: " << chord << endl; //remove after debugging
+    cout << "Playing chord: " << chord << endl; //remove after debugging  
     //play the chord here - use the noteMap to get the fret positions and play the notes
     //use the delayTime to wait between notes
+}
+
+void parseCommand(string command) { //parse the command and execute the appropriate function
+    stringstream ss(command); //use stringstream to parse the command
+    string arg; //string to hold the argument
+    ss >> arg; //get the first argument
+    if (arg == "delay") { //check for delay command
+        string delayGiven; //string to hold the delay time
+        ss >> delayGiven; //get the delay time
+        changeDelayTime(delayGiven); //change the delay time between notes
+    } 
+    else if (arg == "chords") { //check for chords command //= switch this to p for print, -chords and whatnot for what to print?
+        printAvailableChords(); //print the available chords
+    }
+    else if(arg == "allChords") { //check for all chords command
+        printChordsList(); //print the list of all chords
+    }
+    else if (arg == "currentChord") { //check for current chord command
+        printCurrentChord(); //print the current chord being played
+    } 
+    else if (arg == "chordNear") { //check for chord near command
+        int value; //int to hold the value to check for chords near
+        ss >> value; //get the value to check for chords near
+        printChordsNear(value); //print the chords in the range from -n to n
+    } 
+    else if (arg == "score") { //check for score command
+        printChordScore(); //print the list of chords to be played
+    } 
+    else if (arg == "addChord") { //check for add chord command
+        string chordName; //string to hold the chord name
+        int strToPlay, frtToPlay; //int to hold the string and fret positions to play
+        ss >> chordName >> strToPlay >> frtToPlay; //get the chord name and positions to play
+        addToPossibleChords(chordName, strToPlay, frtToPlay); //add the chord to the list of chords to be played
+    } 
+    else if (arg == "addToScore") { //check for add to score command
+        string chord; //string to hold the chord name to add to score
+        ss >> chord; //get the chord name to add to score
+        addChordToScore(chord); //add the chord to the list of chords to be played
+    } 
+    else if (arg == "deleteChord") { //check for delete chord command
+        int index; //int to hold the index of the chord to delete
+        ss >> index; //get the index of the chord to delete
+        deleteChordAtIndex(index); //delete the chord at the specified index from the list of chords to be played
+    } 
+    else if (arg == "reset") { //check for reset command
+        resetScore(); //reset the playing flag and clear the list of chords
+    } 
+    else if (arg == "play") { //check for play command - start playing from beginning of song or continue playing from where it left off
+    {
+        string playType; //string to hold the type of play command
+        ss >> playType; //get the type of play command
+        if (playType == "-r") { //check for start play command
+            startPlaying(); //start playing from the beginning of the song
+        } 
+        else() { 
+            continuePlaying(); //continue playing from where it left off
+        }    
+    }
+    else if (arg == "pause") { //check for pause command
+        pausePlaying(); //stop playing the chord
+    } 
+    else if (arg == "help") { //check for help command
+        printHelp(); //print the help message
+    }
+     else if (arg == "exit") { //check for exit command
+        exit(0); //exit the program
+    } 
+    else {
+        cout << "Invalid command. Type /help for a list of available commands." << endl; //invalid command - print error message
+    }
 }
