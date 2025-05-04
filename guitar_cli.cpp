@@ -1,9 +1,7 @@
-#include <iostream>
-#include <string>    
+#include <Arduino.h>
+#include <string>
 #include <vector>
-#include <hashmap>
-#include <fstream>
-#include <sstream>
+#include <map>
 using namespace std;
 
 
@@ -22,8 +20,8 @@ bool isPlaying = false; //flag to check if the program is    playing a chord or 
 int index = 0; //index to keep track of the current chord being played
 
 //note - noteMap uses string noteName as key, value as [string, fingerPosition]
-hashmap <string, [int, int]> noteMap = {}; //map of notes to their fret positions
-hashmap <string, vector<string>> chordMap = {}; //map of chords to their notes
+std::map <string, [int, int]> noteMap = {}; //map of notes to their fret positions
+std::map <string, vector<string>> chordMap = {}; //map of chords to their notes
 vector <string> chordScore = {}; //list of chords to autoplay
 
 //cli stuff - use for parsing, delimiter
@@ -199,7 +197,7 @@ void continuePlaying()
 
 void restartPlaying() { //restart the playing flag
     index = 0; //reset the index to 0
-    isPlaying = true; //set the flag to true
+    isPlaying = true; //set the flag to true     
     cout << "Restarted playing from the beginning of the song." << endl;
 }
 
